@@ -2,8 +2,10 @@
 
 # Project Nodejs-api-security
 
-## Nhưng ai làm thì cứ bấm nút fork ngay trên cùng bên phải rùi sau đó clone về máy
+## Nhưng ai làm:
+### 1. Fork về máy rùi clone
 `git clone 'url-toi-repo-tren-account-cua-rieng-minh'`
+### 2. Clone trên đây rùi gửi tên account git cho mình add vào collaborator
 
 ## Việc cần làm sau khi clone:
 1. Cài gulp-cli `npm install --global gulp-cli`
