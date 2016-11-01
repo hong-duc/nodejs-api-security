@@ -1,0 +1,38 @@
+
+<html>
+<head>
+    <title>Login</title>
+   <script src="http://code.jquery.com/jquery-1.6.1.min.js"></script>
+   <script src="/socket.io/socket.io.js"></script>
+
+    <script type="text/javascript">
+
+      var socket = io("http://localhost:3006");
+
+      socket.connect();
+      socket.on("connection",function(data){})
+
+      function TestClick(){
+      var user = document.getElementById("textuser").value;
+      var pass = document.getElementById("textpass").value;
+        alert(user + pass);
+      };
+    </script>
+    
+</head>
+<body>
+
+<h2>Login Form</h2>
+
+<form  method="POST" action="http://localhost:3006/">
+  <div class="container">
+    <label><b>Username</b></label>
+    <input type="text" placeholder="Enter Username" name="UserName" id ="textuser">
+
+    <label><b>Password</b></label>
+    <input type="password" placeholder="Enter Password" name="PassHash" id ="textpass">        
+    <button type="submit" id ="btnGui" onclick="TestClick();">Login</button>
+  <div> 
+</form>
+</body>
+</html>

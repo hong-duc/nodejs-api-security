@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import path = require('path');
-let env = process.env.NODE_ENV || 'development';
+let env = process.env.NODE_ENV || 'Login';
 let config = require(path.join(__dirname,'..','..', 'config', 'database.config.json'))[env];
 export abstract class PgPool{
     

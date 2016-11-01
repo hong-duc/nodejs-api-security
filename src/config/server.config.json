@@ -1,8 +1,8 @@
 {
     "development": {
-        "port": 8080
+        "port": 3006
     },
     "test": {
-        "port": 8080
+        "port": 3000
     }
 }

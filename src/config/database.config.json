@@ -13,13 +13,12 @@
         "host": "localhost",
         "port": 5432,
         "ssl": false,
-        "pool":{
+        "pool": {
             "max": 20,
             "min": 4
         },
         "idleTimeoutMillis": 2000,
         "schema": "test"
-        
     },
     "test": {
         "database": "travis_ci_test",
@@ -35,11 +34,32 @@
         "host": "localhost",
         "port": 5432,
         "ssl": false,
-        "pool":{
+        "pool": {
             "max": 20,
             "min": 4
         },
         "idleTimeoutMillis": 2000,
+        "schema": "test"
+    },
+    "Login": {
+        "database": "Login",
+        "username": "postgres",
+        "password": 123,
+        "config": {
+            "dialect": "postgres",
+            "define": {
+                "timestamps": false,
+                "schema": "test"
+            }
+        },
+        "host": "localhost",
+        "port": 5432,
+        "ssl": false,
+        "pool": {
+            "max": 20,
+            "min": 4
+        },
+        "idleTimeoutMillis": 30000,
         "schema": "test"
     }
 }
