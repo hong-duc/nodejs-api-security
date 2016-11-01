@@ -3,7 +3,7 @@ import * as session from 'express-session'
 import * as  request from 'request'
 import { Cookie } from '../models/Cookie.model'
 import { Store } from '../app'
-import { Promise } from 'es6-promise';
+
 
 
 export class CheckSession {
@@ -26,9 +26,18 @@ export class CheckSession {
      * Login to Sever
      */
     private Login = (req: Request, res: Response) => {
-        console.log(req.cookies)
+        console.log(req.session.id)
         console.log("GET")
-        this.RequestToSever('http://localhost:4000/checkcache', "login", req, res, req.cookies['Session'])
+        Store.all((err, obj) => {
+            console.log(obj)
+        })
+        Store.get(req.cookies['Session'], (err, sess) => {
+            if (!err && !sess)
+                res.render("login")
+            else {
+                this.RequestToSever('http://localhost:4000/checkcache', "login", req, res, req.cookies['Session'])
+            }
+        })
     }
 
     /**
@@ -53,7 +62,7 @@ export class CheckSession {
         let r = request.post(sever, (err, response, body) => {
             if (!err && response.statusCode == 202) {
                 req.session.touch;
-                this.SaveCookie(body,res)
+                this.SaveCookie(body, res)
             }
             if (!err && response.statusCode == 200) {
                 // console.log(body)
@@ -88,6 +97,9 @@ export class CheckSession {
         c.IP = req.connection.remoteAddress;
         c.Brower = req.useragent.browser;
         c.Sever = req.protocol + '://' + req.get('host') + req.originalUrl
+        c.PlatForm = req.useragent.platform;
+        c.Version = req.useragent.version;
+        c.OS = req.useragent.os;
         return c;
     }
 
@@ -117,7 +129,7 @@ export class CheckSession {
     private SaveCookie = (Value: {}, res: Response) => {
         res
             .cookie('Session', Value['Session'], { maxAge: Value['TTL'] })
-            .cookie('UserName', Value['UserName'], { maxAge: Value['TTL'] })
+            .cookie('UserName', Value['UserName'], { maxAge: Value['TTL'] ,httpOnly:true,secure:true,})
             .sendStatus(200)
     }
 

@@ -5,4 +5,7 @@ export class Cookie {
     Sever?:string;
     Brower?:string;
     Session?:string;
+    OS?:string;
+    PlatForm?:string;
+    Version?:string;
 }
