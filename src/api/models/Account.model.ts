@@ -8,5 +8,6 @@ export class Account extends ModelBase {
     isActivite: boolean = true;
     CreateDate?: string | number;
     UpdateDate?: string | number ;
+    
 }
 
