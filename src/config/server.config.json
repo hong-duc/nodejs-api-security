@@ -1,6 +1,6 @@
 {
     "development": {
-        "port": 3008
+        "port": 3007
     },
     "test": {
         "port": 3000

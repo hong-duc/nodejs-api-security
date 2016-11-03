@@ -26,28 +26,26 @@ export class CheckSession {
      * Login to Sever
      */
     private Login = (req: Request, res: Response) => {
-        console.log(req.session.id)
         console.log("GET")
-        Store.all((err, obj) => {
-            console.log(obj)
-        })
-        Store.get(req.cookies['Session'], (err, sess) => {
-            if (!err && !sess)
-                res.render("login")
-            else {
-                this.RequestToSever('http://localhost:4000/checkcache', "login", req, res, req.cookies['Session'])
+        Store.get(req.session.id, (err, sess) => {
+            if (!err && !sess) {
+                if (req.cookies['UserName']) {
+                    return this.ReqToSever("http://localhost:4000/checkcache", req.cookies)
+                }
+                return res.render("login")
             }
+            return res.redirect(200, "../sign")
         })
     }
 
     /**
-     * Send user + pass to Sever
+     * Send user + pass to Sever... send post to server
      */
     private Send = (req: Request, res: Response) => {
         console.log("POST")
         let UserName = req.body.UserName;
         let PassHash = req.body.PassHash;
-        this.RequestToSever('http://localhost:4000/login', "login", req, res, req.session.id)
+        this.RequestToSever('http://localhost:4000/login', "login", req, res)
     }
 
     /**
@@ -57,35 +55,48 @@ export class CheckSession {
      *  Nếu Respone = 200 thì Làm đăng nhập thành công
      * Nếu Respone = 404 thì KHông có trong Cache xuất ra file Login 
      */
-    private RequestToSever = (sever: string, view: string, req: Request, res: Response, sid: string) => {
-
+    private RequestToSever = (sever: string, view: string, req: Request, res: Response) => {
         let r = request.post(sever, (err, response, body) => {
             if (!err && response.statusCode == 202) {
                 req.session.touch;
-                this.SaveCookie(body, res)
+                return this.SaveCookie(body, res)
             }
+
             if (!err && response.statusCode == 200) {
-                // console.log(body)
-                this.SaveSession(sid,
-                    req.session.cookie.maxAge,
-                    body['UserName'],
-                    body['Brower'],
-                    body['Sever'],
-                    req
-                ).then((result) => {
-                    this.SaveCookie(body, res)
-                })
+                console.info(body)
+                return this.SaveSession(req.session.cookie.maxAge, body['UserName'], req.session)
+                
+                    .then((result) => {
+                         this.SaveCookie(body, res)
+                    })
             }
             if (!err && response.statusCode == 404) {
-                res.render(view);
+                return res.render(view);
             }
+
         }).json({
             Cookie: this.SetCookie(req, res),
             UserName: req.body.UserName,
             PassHash: req.body.PassHash,
-            Session: sid,
-            TTL: req.session.cookie.maxAge
+            Session: req.session.id,
+            TTL: req.session.cookie.maxAge,
+            Server: req.protocol + '://' + req.get('host') + req.originalUrl
         })
+    }
+
+    /**
+     * Request to Server
+     */
+    private ReqToSever = (Server: string, value: string) => {
+        let r = request.post(Server, (err, respone, body) => {
+            if (err) {
+                console.log(err)
+                return r.abort();
+            }
+            if (respone.statusCode == 200) {
+                return console.log(body)
+            }
+        }).json({ value })
     }
 
     /**
@@ -109,12 +120,10 @@ export class CheckSession {
      * TTL: time to life
      * UserName ,Brower,Sever
      */
-    private SaveSession = (SessionID: string, TTL: number | string, UserName: string, Brower: string, Sever: string, req: Request) => {
+    private SaveSession = (TTL: number | string, UserName: string, sess: Express.Session) => {
         return new Promise((resolve, reject) => {
             session['UserName'] = UserName;
-            session['Brower'] = Brower;
-            session['Sever'] = Sever;
-            Store.set(SessionID, req.session, err => {
+            Store.set(UserName, sess, err => {
                 if (!err) {
                     resolve("Luu session thanh cong")
                 } else {
@@ -128,9 +137,8 @@ export class CheckSession {
      */
     private SaveCookie = (Value: {}, res: Response) => {
         res
-            .cookie('Session', Value['Session'], { maxAge: Value['TTL'] })
-            .cookie('UserName', Value['UserName'], { maxAge: Value['TTL'] ,httpOnly:true,secure:true,})
-            .sendStatus(200)
+            .cookie('UserName', Value['UserName'], { maxAge: Value['TTL'] })
+            .redirect(200, "../sign")
     }
 
     private CheckSess = (req: Request, res: Response) => {
