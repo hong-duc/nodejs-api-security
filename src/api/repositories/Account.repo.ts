@@ -60,27 +60,65 @@ export class AccountRepo extends RepoBase {
     //     })
     // }
 
-    public FindOne = (option: Account, opBrower: ListBrower) => {
+    public FindOne = (option: Account) => {
         let text = 'select * from "account" where username = $1 and passhash = $2'
-        let query3 = 'insert into "dsbrower" (idaccount,namebrower,os,version,platform) values ($1,$2,$3,$4,$5)'
 
         return this._pgPool.query('BEGIN')
             .then(() => {
-                this._pgPool.query(text, [option.UserName, option.PassHash])
+                return this._pgPool.query(text, [option.UserName, option.PassHash])
                     .then(result => {
-                        this._pgPool.query(query3,
-                            [
-                                result.rows[0].idaccount,
-                                opBrower.NameBrower,
-                                opBrower.OS,
-                                opBrower.Version,
-                                opBrower.PlatForm
-                            ]).then(()=>{
-                                this._pgPool.query('COMMIT')
-                            })
+                        if (result.rowCount == 1)
+                            return Promise.resolve(result)
                     })
-            }).catch(()=>{
+
+                    .then(() => {
+                        return this._pgPool.query('COMMIT')
+                    })
+
+            }).catch((err) => {
                 this._pgPool.query('ROLLBACK')
+                return Promise.reject(err);
             })
+    }
+
+    private AddBrower = (opBrower: ListBrower) => {
+        let text2 = 'select * from "dsbrower" where idbrower = $1'
+        let query3 = 'insert into "dsbrower" (idaccount,namebrower,os,version,platform) values ($1,$2,$3,$4,$5)'
+        //     return this._pgPool.query(text2, [result.rows[0].idaccount])
+        //         .then(result => {
+        //             if (!result) {
+        //                 return Promise.resolve(result);
+        //             }else{
+        //                 if(!this.MapValues(result).includes(opBrower))
+        //                     return Promise.resolve(result);
+        //             }
+        //         })
+        // })
+        // .then(result => {
+        //     return this._pgPool.query(query3,
+        //         [
+        //             result.rows[0].idaccount,
+        //             opBrower.NameBrower,
+        //             opBrower.OS,
+        //             opBrower.Version,
+        //             opBrower.PlatForm
+        //         ])
+
+    }
+
+    /**
+     * Kiểm tra DSBROWER theo tiêu chi namebrower, os ,version, platform
+     * Nếu 1 trong 4 cái khác thì thêm vào còn k thì té
+     */
+    private MapValues = (values: QueryResult) => {
+        let list: ListBrower[] = values.rows.map(r => {
+            let lists = new ListBrower();
+            lists.NameBrower = r.namebrower;
+            lists.OS = r.os;
+            lists.PlatForm = r.platform;
+            lists.Version = r.version;
+            return lists;
+        })
+        return list;
     }
 }

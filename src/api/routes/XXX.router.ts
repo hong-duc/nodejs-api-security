@@ -6,6 +6,7 @@ import { AccountRepo } from '../repositories/Account.repo'
 import { MyCache } from '../app'
 import { Account } from '../models/Account.model'
 import { ListBrower } from '../models/ListBrower.model'
+import { Guid } from '../models/GUID.model'
 
 export class XXXRouter {
     private router: Router;
@@ -22,6 +23,7 @@ export class XXXRouter {
     }
 
     private CheckCache = (req: Request, res: Response) => {
+
         MyCache.get(req.body.Session, (err, data) => {
             if (data == undefined) {
                 console.log("Chua co trong Cache")
@@ -36,22 +38,24 @@ export class XXXRouter {
                 })
             }
         })
-        console.log(MyCache.keys())
     }
 
+    /**
+     * Login tài khoản Nếu đúng thì nó lưu Cache với key = UserName
+     */
     private CheckLogin = (req: Request, res: Response) => {
-
-        new AccountRepo().FindOne(this.Account(req.body), this.Brower(req.body)).then(() => {
-            MyCache.set(req.body.Session, req.body, req.body.TTL, (err, data) => {
-                if (!err && data)
-                    res.status(200).send(req.body)
+        return new AccountRepo().FindOne(this.Account(req.body))
+            .then((result) => {
+                return this.FindCache(req.body);
             })
-        }).catch(() => { res.sendStatus(404) })
-        res.status(200).send(req.body)
+            .then(() => {
+                return res.status(200).send(req.body['UserName']);
+            })
+            .catch(() => { return res.sendStatus(404) })
     }
 
     private CheckCookieInClient = (value) => {
-        let r = request.post('http://localhost:3008/CheckSession', (err, response, body) => {
+        let r = request.post('http://localhost:3007/CheckSession', (err, response, body) => {
             if (!err) {
                 if (response.statusCode == 404) {
                     console.log("Thang Cookie o duoi chet cmnr")
@@ -66,6 +70,32 @@ export class XXXRouter {
             console.log("Thang nay chet cmnr " + key + value)
             this.CheckCookieInClient(value)
         })
+    }
+
+    private FindCache = (value): Promise<any> => {
+        let text = `${value.UserName}_${value.Server}`;
+
+        return new Promise((resolve, reject) => {
+            MyCache.get(text, (err, data) => {
+                if (data) {
+                    console.info("Đã update value")
+                    data = value
+                    return resolve();
+                } else {
+                    return MyCache.set(text, value, value.TTL, (err) => {
+                        if (err)
+                        reject(err);
+                        console.log("Đã thêm vào Cache")
+                        /**
+                         * Thêm vào DSBrower
+                         */
+                        resolve();
+                    })
+                }
+            })
+            return reject("Error")
+        })
+
     }
 
     private Account = (value): Account => {
