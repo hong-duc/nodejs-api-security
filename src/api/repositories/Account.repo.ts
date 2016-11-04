@@ -62,38 +62,30 @@ export class AccountRepo extends RepoBase {
 
     public FindOne = (option: Account) => {
         let text = 'select * from "account" where username = $1 and passhash = $2'
-
-        return this._pgPool.query('BEGIN')
-            .then(() => {
-                return this._pgPool.query(text, [option.UserName, option.PassHash])
-                    .then(result => {
-                        if (result.rowCount == 1)
-                            return Promise.resolve(result)
-                    })
-
-                    .then(() => {
-                        return this._pgPool.query('COMMIT')
-                    })
-
-            }).catch((err) => {
-                this._pgPool.query('ROLLBACK')
+        return this._pgPool.query(text, [option.UserName, option.PassHash])
+            .then(result => {
+                if (result.rowCount == 1)
+                    return Promise.resolve(result)
+            })
+            .catch((err) => {
                 return Promise.reject(err);
             })
     }
 
-    private AddBrower = (opBrower: ListBrower) => {
-        let text2 = 'select * from "dsbrower" where idbrower = $1'
+    public AddBrower = (opBrower: ListBrower, idaccount: string) => {
+        let text2 = 'select * from "dsbrower" where namebrower = $1 and os = $2 and version = $3 and platform =$4'
         let query3 = 'insert into "dsbrower" (idaccount,namebrower,os,version,platform) values ($1,$2,$3,$4,$5)'
-        //     return this._pgPool.query(text2, [result.rows[0].idaccount])
-        //         .then(result => {
-        //             if (!result) {
-        //                 return Promise.resolve(result);
-        //             }else{
-        //                 if(!this.MapValues(result).includes(opBrower))
-        //                     return Promise.resolve(result);
-        //             }
-        //         })
-        // })
+        return this._pgPool.query(text2, [opBrower.NameBrower, opBrower.OS, opBrower.Version, opBrower.PlatForm])
+            .then(result => {
+                if (result.rowCount == 0)
+                    return this._pgPool.query(query3, [idaccount, opBrower.NameBrower, opBrower.OS, opBrower.Version, opBrower.PlatForm])
+                        .then(() => { Promise.resolve() })
+                else
+                    return Promise.resolve();
+            }).catch(err => {
+                return Promise.reject(err)
+            })
+
         // .then(result => {
         //     return this._pgPool.query(query3,
         //         [

@@ -6,7 +6,7 @@ import { AccountRepo } from '../repositories/Account.repo'
 import { MyCache } from '../app'
 import { Account } from '../models/Account.model'
 import { ListBrower } from '../models/ListBrower.model'
-import { Guid } from '../models/GUID.model'
+
 
 export class XXXRouter {
     private router: Router;
@@ -23,20 +23,34 @@ export class XXXRouter {
     }
 
     private CheckCache = (req: Request, res: Response) => {
-
-        MyCache.get(req.body.Session, (err, data) => {
-            if (data == undefined) {
-                console.log("Chua co trong Cache")
-                res.sendStatus(404)
-            } else {
-                console.log("Da Co Trong Cache")
-                MyCache.ttl(req.body.Session, req.body.TTL, (err, changed) => {
-                    if (!err && changed) {
-                        console.log("Đã thay đổi TTL " + req.body.Session + " : " + req.body.TTL)
-                        res.status(202).send(data)
-                    }
-                })
+        const key = `${req.body['UserName']}_${req.body['Server']}_${req.body['Cookie']['Brower']}`;
+        console.log(key)
+        MyCache.get(key, (err, data) => {
+            if (data) {
+                let dataA = this.Account(data);
+                let browerA = this.Brower(data);
+                let dataB = this.Account(req.body)
+                let browerB = this.Brower(req.body)
+                console.log(data)
+                if (
+                    dataA.UserName == dataB.UserName
+                    && browerA.NameBrower === browerB.NameBrower
+                    && browerA.OS == browerB.OS
+                    && browerA.PlatForm == browerB.PlatForm
+                    && browerA.Version == browerB.Version
+                ) {
+                    MyCache.set(key, req.body, req.body['TTL'], err => {
+                        if (err) {
+                            console.error(err)
+                            return res.sendStatus(404)
+                        }
+                        return console.log("Da set Cache voi Session moi")
+                    });
+                    return res.status(200).send({Session:data['Session'],UserName:data['UserName']});
+                }
+                return res.sendStatus(404);
             }
+            return res.sendStatus(404);
         })
     }
 
@@ -44,12 +58,16 @@ export class XXXRouter {
      * Login tài khoản Nếu đúng thì nó lưu Cache với key = UserName
      */
     private CheckLogin = (req: Request, res: Response) => {
-        return new AccountRepo().FindOne(this.Account(req.body))
+        const body = req.body;
+        return new AccountRepo().FindOne(this.Account(body))
             .then((result) => {
-                return this.FindCache(req.body);
+                return this.FindCache(body, result.rows[0].idaccount);
+            })
+            .then(result => {
+                return new AccountRepo().AddBrower(this.Brower(body), result)
             })
             .then(() => {
-                return res.status(200).send(req.body['UserName']);
+                return res.status(200).send(body)
             })
             .catch(() => { return res.sendStatus(404) })
     }
@@ -65,31 +83,24 @@ export class XXXRouter {
 
     }
 
-    public Check = () => {
-        MyCache.on("expired", (key, value) => {
-            console.log("Thang nay chet cmnr " + key + value)
-            this.CheckCookieInClient(value)
-        })
-    }
 
-    private FindCache = (value): Promise<any> => {
-        let text = `${value.UserName}_${value.Server}`;
+
+    private FindCache = (value, id: string): Promise<any> => {
+
+        let text = `${value.UserName}_${value.Server}_${value['Cookie']['Brower']}`;
 
         return new Promise((resolve, reject) => {
             MyCache.get(text, (err, data) => {
                 if (data) {
                     console.info("Đã update value")
                     data = value
-                    return resolve();
+                    return resolve(id);
                 } else {
                     return MyCache.set(text, value, value.TTL, (err) => {
                         if (err)
-                        reject(err);
+                            reject(err);
                         console.log("Đã thêm vào Cache")
-                        /**
-                         * Thêm vào DSBrower
-                         */
-                        resolve();
+                        return resolve(id);
                     })
                 }
             })
@@ -97,7 +108,6 @@ export class XXXRouter {
         })
 
     }
-
     private Account = (value): Account => {
         let account = new Account();
         account.UserName = value.UserName;
@@ -111,6 +121,13 @@ export class XXXRouter {
         list.PlatForm = value['Cookie'].PlatForm
         list.Version = value['Cookie'].Version
         return list;
+    }
+
+    public Check = () => {
+        MyCache.on("expired", (key, value) => {
+            console.log("Thang nay chet cmnr " + key + value)
+            //this.CheckCookieInClient(value)
+        })
     }
 }
 
