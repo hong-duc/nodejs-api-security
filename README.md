@@ -3,8 +3,8 @@
 # Project Nodejs-api-security
 
 ## Việc cần làm sau khi clone:
-1. Cài gulp-cli `npm install --global gulp-cli`
-2. chạy `npm install` để cài tất cả dependencies đã khai báo trong package.json
+1. Tạo Table PG với tên bảng account với cloumns. idaccount_username_passhash_email_isactivite_createdate_updatedate
+2. Tạo Table PG với tên bảng dsbrower với cloumns. idbrower_idaccount_namebrower_os_version_platform
 
 ## Để chạy
 `npm start` hoặc `gulp` để chạy

@@ -2,7 +2,7 @@
   "name": "nodejs-api-security",
   "version": "1.0.0",
   "description": "",
-  "private": true,
+  "private": false,
   "main": "./dist/server.js",
   "scripts": {
     "test": "gulp compile && alsatian ./dist/test/book.router.spec.js",

@@ -21,16 +21,16 @@ app.use(config);
 
 // import router
 import { BookRouter } from './routes/book.router';
-import { CheckSession } from './routes/CheckSession'
 import { XXXRouter } from './routes/XXX.router'
-
+import { Cache } from './routes/cache.router'
 // sử dụng các router được định nghĩa từ các modules
 let a = new XXXRouter();
+//Tạo Store khi lưu session
 export let Store = new session.MemoryStore();
-export const MyCache = new NodeCache({})
+export const MyCache = new NodeCache({checkperiod:600})
 
 app.use('/api', [(new BookRouter()).getRouter()]);
-app.use('/', [a.GetRouter()])
-//Tạo Store khi lưu session
-a.Check();
+app.use("/",[a.GetRouter()])
+new Cache().AllCache()
+//middleware cho tất cả các router
 export default app;

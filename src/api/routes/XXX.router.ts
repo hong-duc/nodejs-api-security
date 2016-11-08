@@ -24,14 +24,13 @@ export class XXXRouter {
 
     private CheckCache = (req: Request, res: Response) => {
         const key = `${req.body['UserName']}_${req.body['Server']}_${req.body['Cookie']['Brower']}`;
-        console.log(key)
+        // console.log(key)
         MyCache.get(key, (err, data) => {
             if (data) {
                 let dataA = this.Account(data);
                 let browerA = this.Brower(data);
                 let dataB = this.Account(req.body)
                 let browerB = this.Brower(req.body)
-                console.log(data)
                 if (
                     dataA.UserName == dataB.UserName
                     && browerA.NameBrower === browerB.NameBrower
@@ -46,7 +45,7 @@ export class XXXRouter {
                         }
                         return console.log("Da set Cache voi Session moi")
                     });
-                    return res.status(200).send({Session:data['Session'],UserName:data['UserName']});
+                    return res.status(200).send({ Session: data['Session'], UserName: data['UserName'] });
                 }
                 return res.sendStatus(404);
             }
@@ -72,22 +71,10 @@ export class XXXRouter {
             .catch(() => { return res.sendStatus(404) })
     }
 
-    private CheckCookieInClient = (value) => {
-        let r = request.post('http://localhost:3007/CheckSession', (err, response, body) => {
-            if (!err) {
-                if (response.statusCode == 404) {
-                    console.log("Thang Cookie o duoi chet cmnr")
-                }
-            }
-        }).json(value)
 
-    }
+    private FindCache = (value:{}, id: string): Promise<any> => {
 
-
-
-    private FindCache = (value, id: string): Promise<any> => {
-
-        let text = `${value.UserName}_${value.Server}_${value['Cookie']['Brower']}`;
+        let text = `${value['UserName']}_${value['Server']}_${value['Cookie']['Brower']}`;
 
         return new Promise((resolve, reject) => {
             MyCache.get(text, (err, data) => {
@@ -96,7 +83,8 @@ export class XXXRouter {
                     data = value
                     return resolve(id);
                 } else {
-                    return MyCache.set(text, value, value.TTL, (err) => {
+                    console.log(value)
+                    return MyCache.set(text, value, value['TTL'], (err) => {
                         if (err)
                             reject(err);
                         console.log("Đã thêm vào Cache")
@@ -107,7 +95,9 @@ export class XXXRouter {
             return reject("Error")
         })
 
+
     }
+
     private Account = (value): Account => {
         let account = new Account();
         account.UserName = value.UserName;
@@ -123,12 +113,7 @@ export class XXXRouter {
         return list;
     }
 
-    public Check = () => {
-        MyCache.on("expired", (key, value) => {
-            console.log("Thang nay chet cmnr " + key + value)
-            //this.CheckCookieInClient(value)
-        })
-    }
+
 }
 
 
