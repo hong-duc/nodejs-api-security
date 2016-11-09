@@ -27,8 +27,8 @@ import { Cache } from './routes/cache.router'
 let a = new XXXRouter();
 //Tạo Store khi lưu session
 export let Store = new session.MemoryStore();
-export const MyCache = new NodeCache({checkperiod:600})
-
+export const MyCache = new NodeCache({checkperiod:10,useClones:true})
+process.setMaxListeners(50)
 app.use('/api', [(new BookRouter()).getRouter()]);
 app.use("/",[a.GetRouter()])
 new Cache().AllCache()
