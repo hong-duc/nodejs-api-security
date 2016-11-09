@@ -89,15 +89,16 @@ export class Cache {
      */
 
     private callback(a?: request.Request, n?, times?) {
+        clearTimeout(n)
+        clearTimeout(times)
         if (min.length == 0) {
             if (a) {
                 console.info(`stop`)
                 a.abort();
             }
-            clearTimeout(n)
-            clearTimeout(times)
+        } else {
+            return new Cache().AllCache()
         }
-        // return new Cache().AllCache()
     }
     private callNTimes = (fn): NodeJS.Timer => {
 
