@@ -6,7 +6,7 @@ export let config = session({
     saveUninitialized: true,
     rolling: false,
     cookie: {
-        maxAge: 200000,
+        maxAge: 30000,
         secure: false,
         httpOnly: true,
     }
